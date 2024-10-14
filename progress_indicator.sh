@@ -33,6 +33,7 @@ _YELLOW="\e[1;33m"
 _RESET_COLOR="\e[0;0m"
 _CLEAR_LINE="\e[2K"
 _NEWLINE="\n"
+_DISABLE_LINE_WRAP="\033[?7l"
 
 declare -A _PI_COLORS=(
     [$_PI_STATUS_WAITING]=$_WHITE
@@ -428,7 +429,7 @@ function _build_progress_line
     # show logline only for tasks in the RUNNING stage
     if [ "$status" = "$_PI_STATUS_RUNNING" ]; then
         log_file="$(_build_log_file_path "$task_id")"
-        log_line="↳ $(test -f "$log_file" && tail -n 1 "$log_file")"
+        log_line="${_DISABLE_LINE_WRAP}↳ $(test -f "$log_file" && tail -n 1 "$log_file")"
     # for tasks in status ERROR, point to logs
     elif [ "$status" = "$_PI_STATUS_ERROR" ] || [ "$status" = "$_PI_STATUS_DONE" ]; then
         log_file="$(_build_log_file_path "$task_id")"

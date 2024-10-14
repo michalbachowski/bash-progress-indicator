@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 
-echo -n 'devcontainer/setup/config/devcontainer/homedir/tools/artifactory-refresh.sh:CONFIG_DOC_REF_MSG="Details: https://cd.splunkdev.com/EnterpriseSecurity/app-ess/-/blob/develop/docs/installation/index.md?ref_type=heads#download-okta-artifactory-login-utility\n'
-echo -n 'devcontainer/setup/config/devcontainer/homedir/tools/artifactory-refresh.sh:CONFIG_DOC_REF_MSG="Details: https://cd.splunkdev.com/EnterpriseSecurity/app-ess/-/blob/develop/docs/installation/index.md?ref_type=heads#download-okta-artifactory-login-utility\n'
-echo 'devcontainer/setup/config/devcontainer/homedir/tools/artifactory-refresh.sh:CONFIG_DOC_REF_MSG="Details: https://cd.splunkdev.com/EnterpriseSecurity/app-ess/-/blob/develop/docs/installation/index.md?ref_type=heads#download-okta-artifactory-login-utility\n'
+echo 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.'
+
 sleep 2
 exit 1
