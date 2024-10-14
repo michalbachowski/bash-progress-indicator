@@ -250,7 +250,18 @@ function _wait_deps
 
 function _wait_dep
 {
-    test -n "$1" && while [ -e "/proc/${1}" ]; do sleep 1; done;
+    if [ -n "$1" ]; then
+        while : ; do
+            ps -o pid= -p "$1" > /dev/null 2>&1
+            #kill -0 "$1" > /dev/null
+            if [ $? -eq 0 ]; then
+                # Process is running, will check again in a moment
+                sleep 1;
+            else
+                break
+            fi
+        done;
+    fi
 }
 
 function _is_parent_status_failed
@@ -465,7 +476,6 @@ function _read_task_status_from_file
     if [ -f "$status_file" ]; then
         status="$(tail -n 1 "$status_file")"
     fi
-
 
     if [ -z "$status" ]; then
         status=$_PI_STATUS_WAITING
