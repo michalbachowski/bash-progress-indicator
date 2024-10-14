@@ -232,7 +232,7 @@ function _wait_deps
             _wait_dep "${_pi_task_pids[$dep_id]}"
         done
 
-        # check is all dependencies are done with success
+        # check if all dependencies are done with success
         for dep_id in $dependencies; do
             _refresh_task_status "$dep_id" >> /dev/null
             dep_status="$(_read_task_status_from_file "$dep_id")"
