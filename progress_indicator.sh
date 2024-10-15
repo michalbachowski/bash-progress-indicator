@@ -65,6 +65,7 @@ function setup_progress_indicator
 
 function _setup_workdir
 {
+    local base=""
     # base dir given explicitely
     if [ -n "$1" ]; then
         base="$1"
@@ -168,6 +169,7 @@ function _validate_input
 
     # dependencies
     if [ -n "$4" ]; then
+        local dep_id=""
         for dep_id in $4; do
             if [ -z "${_pi_scripts[$dep_id]}" ]; then
                 _error "The [$dep_id] dependency of the [$1] task must be defined before the [$1] task!"
@@ -179,11 +181,12 @@ function _validate_input
 function start_progress_indicator
 {
     for ((i = 0; i < ${#_pi_tasks[@]}; i++)); do
-        task_id="${_pi_tasks[$i]}"
-        script="${_pi_scripts[$task_id]}"
-        log_file="$(_build_log_file_path "$task_id")"
-        status_file="$(_build_status_file_path "$task_id")"
-        dependencies="${_pi_dependencies[$task_id]}"
+        local task_id="${_pi_tasks[$i]}"
+        local script="${_pi_scripts[$task_id]}"
+        local log_file="$(_build_log_file_path "$task_id")"
+        local status_file="$(_build_status_file_path "$task_id")"
+        local dependencies="${_pi_dependencies[$task_id]}"
+        local dep_id=""
 
         for dep_id in $3; do
             if [ -z "${_pi_scripts[$dep_id]}" ]; then
@@ -211,10 +214,10 @@ function start_progress_indicator
 
 function _execute_task
 {
-    script="$1"
-    log_file="$2"
-    status_file="$3"
-    dependencies="$4"
+    local script="$1"
+    local log_file="$2"
+    local status_file="$3"
+    local dependencies="$4"
 
     (echo $_PI_STATUS_WAITING >> "$status_file"; \
      _wait_deps "$dependencies" >> "$status_file" \
@@ -225,10 +228,11 @@ function _execute_task
 
 function _wait_deps
 {
-    dependencies="$1"
+    local dependencies="$1"
 
     # do any work only when there are dependencies defined
     if [ -n "$dependencies" ]; then
+        local dep_id=""
         # wait for deps
         for dep_id in $dependencies; do
             _wait_dep "${_pi_task_pids[$dep_id]}"
@@ -268,7 +272,7 @@ function _wait_dep
 
 function _is_parent_status_failed
 {
-    status="$1"
+    local status="$1"
 
     if [ "$status" = "$_PI_STATUS_ERROR" ]; then
         return 0
@@ -283,8 +287,8 @@ function _is_parent_status_failed
 
 function _execute_script_and_report_status
 {
-    script="$1"
-    log_file="$2"
+    local script="$1"
+    local log_file="$2"
 
     "$script" > "$log_file" 2>&1;
 
@@ -310,7 +314,7 @@ function _wait_for_tasks_to_finish
 function _is_any_task_running
 {
     for ((i = 0; i < ${#_pi_tasks[@]}; i++)); do
-        task_id="${_pi_tasks[$i]}"
+        local task_id="${_pi_tasks[$i]}"
         _refresh_task_status "$task_id"
         if _is_task_running "$task_id"; then
             return 0
@@ -322,8 +326,8 @@ function _is_any_task_running
 
 function _is_task_running
 {
-    task_id="$1"
-    status="${_pi_results[$task_id]}"
+    local task_id="$1"
+    local status="${_pi_results[$task_id]}"
 
     # no status in cache
     if [ -z "$status" ]; then
@@ -359,6 +363,7 @@ function _shutdown_progress_indicator
 {
     _pi_indicator_stopping=1
 
+    local task_id=""
     for ((i = 0; i < ${#_pi_tasks[@]}; i++)); do
         task_id="${_pi_tasks[$i]}"
 
@@ -376,9 +381,9 @@ function _do_update
 
 function _display_current_status
 {
-    old_lines_to_clear=$_PI_LINES_TO_CLEAR
+    local old_lines_to_clear=$_PI_LINES_TO_CLEAR
     _PI_LINES_TO_CLEAR=0
-    out=""
+    local out=""
     _build_current_status out _PI_LINES_TO_CLEAR
 
     # if there are any other lines to be cleared - rewind
@@ -411,10 +416,10 @@ function _build_current_status
     local -n status_to_display=$1
     local -n lines_counter=$2
     for ((i = 0; i < ${#_pi_tasks[@]}; i++)); do
-        task_id="${_pi_tasks[$i]}"
+        local task_id="${_pi_tasks[$i]}"
         _refresh_task_status "$task_id"
-        tmp_status=""
-        lineno=0
+        local tmp_status=""
+        local lineno=0
         _build_progress_line tmp_status lineno "$task_id"
         status_to_display+="$tmp_status"
         lines_counter=$(($lines_counter+$lineno))
@@ -425,11 +430,12 @@ function _build_progress_line
 {
     local -n progress_line_to_display=$1
     local -n lines_number=$2
-    task_id="$3"
-    label="${_pi_labels[$task_id]}"
-    status="$(_get_task_status "$task_id")"
-    log_line=""
-    log_lines_number=1
+    local task_id="$3"
+    local label="${_pi_labels[$task_id]}"
+    local status="$(_get_task_status "$task_id")"
+    local log_lines_number=0
+    local symbol=""
+    local color=""
 
     # show spinner only for RUNNING status
     if [ "$status" = "$_PI_STATUS_RUNNING" ]; then
@@ -462,20 +468,20 @@ function _build_progress_line
 
 function _refresh_task_status
 {
-    task_id="$1"
+    local task_id="$1"
 
     if _is_task_running "$task_id"; then
-        status="$(_read_task_status_from_file "$task_id")"
+        local status="$(_read_task_status_from_file "$task_id")"
         _pi_results[$task_id]="$status"
     fi
 }
 
 function _read_task_status_from_file
 {
-    task_id="$1"
+    local task_id="$1"
 
-    status_file="$(_build_status_file_path "$task_id")"
-    status=""
+    local status_file="$(_build_status_file_path "$task_id")"
+    local status=""
 
     if [ -f "$status_file" ]; then
         status="$(tail -n 1 "$status_file")"
@@ -490,8 +496,8 @@ function _read_task_status_from_file
 
 function _get_task_status
 {
-    task_id="$1"
-    status="${_pi_results[$task_id]}"
+    local task_id="$1"
+    local status="${_pi_results[$task_id]}"
     echo "$status"
 }
 
