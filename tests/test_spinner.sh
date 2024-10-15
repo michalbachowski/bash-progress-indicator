@@ -3,7 +3,7 @@
 prefix="./fixtures"
 
 source "../progress_indicator.sh"
-setup_progress_indicator ~/pi-test
+setup_progress_indicator ./test-output
 
 indicate_progress "a" "Running a" "${prefix}/a.sh"
 indicate_progress b "Installing b" "${prefix}/b.sh" a
