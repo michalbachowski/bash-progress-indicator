@@ -8,13 +8,11 @@ Supports indicating progress for multiple tasks and tasks dependency.
 Grab the [`progress_indicator.sh`](./progress_indicator.sh) along with the [`LICENSE`](./LICENSE) file.
 
 ```bash
-
 # load the script
-
-source <path-to-progress_indicator.sh>
+source "<path-to-progress_indicator.sh>"
 
 # initialize configuration
-setup_progress_indicator <path-where-to-put-logs-and-status-information>
+setup_progress_indicator "<path-where-to-put-logs-and-status-information>"
 
 # add tasks
 indicate_progress "<task-1-id>" "<task-1-display-label>" "<path-to-executable>" "<optional-space-separated-list-of-IDs-of-required-tasks>"
