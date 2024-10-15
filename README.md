@@ -37,7 +37,36 @@ These _parent_ tasks must be specified before can be referenced in the dependenc
 
 # Testing
 
+Run:
+
 ```bash
 cd tests
 ./test_spinner.sh
 ```
+
+Should end up with (colored) output:
+
+```bash
+[✔] Running a
+    ↳ Logs: ./test-output/<date>/<time>/logs/a.log
+[✖] Installing b
+    ↳ Logs: ./test-output/<date>/<time>/logs/b.log
+[!] Updating c
+    Required tasks did not finish with success! Task NOT RUN!
+[✔] Running d
+    ↳ Logs: ./test-output/<date>/<time>/logs/d.log
+[✔] Running e
+    ↳ Logs: ./test-output/<date>/<time>/logs/e.log
+[!] Running f
+    Required tasks did not finish with success! Task NOT RUN!
+[!] Running g
+    Required tasks did not finish with success! Task NOT RUN!
+[✖] Running h
+    ↳ Logs: ./test-output/<date>/<time>/logs/h.log
+[✔] Running i
+    ↳ Logs: ./test-output/<date>/<time>/logs/i.log
+```
+
+# Known Issues
+
+[ ] When screen has less rows than spinner produces lines, there is a garbage displayed above the output.
