@@ -26,6 +26,8 @@ _PI_STATUS_RUNNING="RUNNING"
 _PI_STATUS_MSG_WAITING="Waiting for parent tasks to finish"
 _PI_STATUS_MSG_PARENT_TASK_FAILED="Required tasks did not finish with success! Task NOT RUN!"
 
+_PI_LINES_TO_CLEAR=0
+
 _WHITE="\e[1;37m"
 _GREEN="\e[1;32m"
 _RED="\e[1;31m"
@@ -372,22 +374,21 @@ function _shutdown_progress_indicator
 
 function _do_update
 {
-    _display_current_status "clear"
+    _display_current_status
 }
 
 function _display_current_status
 {
-    clear="$1"
-
+    old_lines_to_clear=$_PI_LINES_TO_CLEAR
+    _PI_LINES_TO_CLEAR=0
     out=""
-    _build_current_status out
+    _build_current_status out _PI_LINES_TO_CLEAR
 
-    if [ -n "$clear" ]; then
-        # if there are any other lines to be cleared - rewind
-        # the clearing itself will happen for each line separately
-        # see _build_progress_line
-        lines=$((${#_pi_tasks[@]}*2))
-        echo -en "\e[${lines}F$out"
+    # if there are any other lines to be cleared - rewind
+    # the clearing itself will happen for each line separately
+    # see _build_progress_line
+    if [ $old_lines_to_clear -gt 0 ]; then
+        echo -en "\e[${old_lines_to_clear}F$out"
     else
         echo -en "$out"
     fi
@@ -411,22 +412,27 @@ function _indicate_progress
 function _build_current_status
 {
     local -n status_to_display=$1
+    local -n lines_counter=$2
     for ((i = 0; i < ${#_pi_tasks[@]}; i++)); do
         task_id="${_pi_tasks[$i]}"
         _refresh_task_status "$task_id"
-        tmp=""
-        _build_progress_line tmp "$task_id"
-        status_to_display+="$tmp"
+        tmp_status=""
+        lineno=0
+        _build_progress_line tmp_status lineno "$task_id"
+        status_to_display+="$tmp_status"
+        lines_counter=$(($lines_counter+$lineno))
     done
 }
 
 function _build_progress_line
 {
     local -n progress_line_to_display=$1
-    task_id="$2"
+    local -n lines_number=$2
+    task_id="$3"
     label="${_pi_labels[$task_id]}"
     status="$(_get_task_status "$task_id")"
     log_line=""
+    log_lines_number=1
 
     # show spinner only for RUNNING status
     if [ "$status" = "$_PI_STATUS_RUNNING" ]; then
@@ -453,6 +459,7 @@ function _build_progress_line
         log_line="$_PI_STATUS_MSG_PARENT_TASK_FAILED"
     fi
 
+    lines_number=$(($lines_number+1+$log_lines_number))
     progress_line_to_display="${_CLEAR_LINE}${color}[$symbol] $label ${_RESET_COLOR}${_NEWLINE}${_CLEAR_LINE}    $log_line${_NEWLINE}"
 }
 
