@@ -105,7 +105,7 @@ function _setup_workdir
         return
     fi
 
-    _PI_WORK_DIR=$base/$(date +"%Y%m%d/%H%M%S")
+    _PI_WORK_DIR=$(realpath "$base")/$(date +"%Y%m%d/%H%M%S")
     _log_debug "Setting up workdir to [$_PI_WORK_DIR]"
 
     mkdir -p $_PI_WORK_DIR
