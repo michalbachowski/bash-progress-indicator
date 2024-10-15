@@ -40,12 +40,28 @@ Run:
 
 ```bash
 cd tests
-./test_spinner.sh
+./run_tests.sh
+```
+
+or with `Makefile`
+```bash
+make test
 ```
 
 Should end up with (colored) output:
 
 ```bash
+Fast Exit Test
+--------------
+
+[✔] Running a
+    ↳ Logs: ./test-output/<date>/<time>/logs/a.log
+
+===================
+
+Complex Dependencies Test
+--------------------------
+
 [✔] Running a
     ↳ Logs: ./test-output/<date>/<time>/logs/a.log
 [✖] Installing b
@@ -64,8 +80,10 @@ Should end up with (colored) output:
     ↳ Logs: ./test-output/<date>/<time>/logs/h.log
 [✔] Running i
     ↳ Logs: ./test-output/<date>/<time>/logs/i.log
+
+===================
 ```
 
 # Known Issues
 
-[ ] When screen has less rows than spinner produces lines, there is a garbage displayed above the output.
+[] When screen has less rows than spinner produces lines, there is a garbage displayed above the output.
