@@ -99,7 +99,7 @@ function _setup_workdir
         base="$1"
     # no base dir and no _PI_WORK_DIR
     elif [ -z "$_PI_WORK_DIR" ]; then
-        base="~/container_setup_logs"
+        base="~/process-indicator-logs"
     # no explicit base dir given and _PI_WORK_DIR is non-empty
     else
         return
