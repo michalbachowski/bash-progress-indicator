@@ -363,21 +363,19 @@ function _stop_progress_indicator
     set -m
 
     _pi_indicator_stopping=1
+
+    _do_update
 }
 
 function _stop_progress_updater 
 {
     _pi_indicator_stopping=1
-
     local task_id=""
     for ((i = 0; i < ${#_pi_tasks[@]}; i++)); do
         task_id="${_pi_tasks[$i]}"
 
         { kill -9 "${_pi_task_pids[$task_id]}" && wait; } 2>/dev/null
-
     done
-
-    _do_update
 }
 
 function _do_update
