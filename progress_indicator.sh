@@ -3,16 +3,19 @@ _PI_WORK_DIR=
 _PI_LOG_DIR=
 _PI_STATUS_DIR=
 
+# see reset_progress_indicator for defaults
 _pi_previous_output_columns_number=0
 _pi_indicator_process_pid=""
 _pi_tasks=()
 _pi_indicator_stopping=0
 _pi_current_status_indicator_char=0
-declare -A _pi_results
+_pi_lines_to_clear=0
+
+declare -A _pi_dependencies
 declare -A _pi_scripts
 declare -A _pi_labels
 declare -A _pi_task_pids
-declare -A _pi_dependencies
+declare -A _pi_results
 
 _PI_STATUS_INDICATOR_CHARS=(← ↖ ↑ ↗ → ↘ ↓ ↙)
 _PI_SPINNER_FRAME_NUMBER=${#_PI_STATUS_INDICATOR_CHARS[@]}
@@ -28,8 +31,6 @@ _PI_STATUS_RUNNING="RUNNING"
 
 _PI_STATUS_MSG_WAITING="Waiting for parent tasks to finish"
 _PI_STATUS_MSG_PARENT_TASK_FAILED="Required tasks did not finish with success! Task NOT RUN!"
-
-_PI_LINES_TO_CLEAR=0
 
 _ECHO_CMD='echo -en'
 _WHITE="\e[1;37m"
@@ -68,6 +69,26 @@ function setup_progress_indicator
     _setup_statusdir
 
     trap _stop_progress_indicator EXIT
+    reset_progress_indicator
+}
+
+function reset_progress_indicator
+{
+    set -m
+    _pi_dependencies=()
+    _pi_labels=()
+    _pi_results=()
+    _pi_scripts=()
+    _pi_tasks=()
+    _pi_task_pids=()
+
+    _pi_previous_output_columns_number=0
+    _pi_indicator_process_pid=""
+    _pi_tasks=()
+    _pi_indicator_stopping=0
+    _pi_current_status_indicator_char=0
+    _pi_lines_to_clear=0
+    _pi_indicator_process_pid=""
 }
 
 function _setup_workdir
@@ -217,6 +238,7 @@ function start_progress_indicator
     _wait_for_tasks_to_finish
 
     _stop_progress_indicator
+    reset_progress_indicator
 }
 
 function _execute_task
@@ -360,7 +382,6 @@ function _stop_progress_indicator
 
     { kill $_pi_indicator_process_pid && wait; } 2>/dev/null
     _pi_indicator_process_pid=""
-    set -m
 
     _pi_indicator_stopping=1
 
@@ -380,11 +401,11 @@ function _stop_progress_updater
 
 function _do_update
 {
-    local old_lines_to_clear=$_PI_LINES_TO_CLEAR
-    _PI_LINES_TO_CLEAR=0
+    local old_lines_to_clear=$_pi_lines_to_clear
+    _pi_lines_to_clear=0
     local output=""
 
-    _build_current_status output _PI_LINES_TO_CLEAR
+    _build_current_status output _pi_lines_to_clear
 
     # remove any outstanding lines
     # (eg. when there were 4 log lines, and there is only 1 status line, then there will be 3 lines remaining)
