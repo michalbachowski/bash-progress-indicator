@@ -17,6 +17,9 @@ declare -A _pi_dependencies
 _PI_STATUS_INDICATOR_CHARS=(← ↖ ↑ ↗ → ↘ ↓ ↙)
 _PI_SPINNER_FRAME_NUMBER=${#_PI_STATUS_INDICATOR_CHARS[@]}
 
+_LOG_LINES_TO_DISPLAY=4
+_LOG_FILE_PATH_INFO_PREFIX="↳ "
+
 _PI_STATUS_DONE="DONE"
 _PI_STATUS_ERROR="ERROR"
 _PI_STATUS_PARENT_TASK_FAILED="PARENT_TASK_FAILED"
@@ -28,14 +31,18 @@ _PI_STATUS_MSG_PARENT_TASK_FAILED="Required tasks did not finish with success! T
 
 _PI_LINES_TO_CLEAR=0
 
+_ECHO_CMD='echo -en'
 _WHITE="\e[1;37m"
 _GREEN="\e[1;32m"
 _RED="\e[1;31m"
 _YELLOW="\e[1;33m"
-_RESET_COLOR="\e[0;0m"
+_GRAY="\e[1;90m"
+_RESET_ESCAPE_SEQUENCES="\e[0m"
 _CLEAR_LINE="\e[2K"
 _NEWLINE="\n"
-_DISABLE_LINE_WRAP="\033[?7l"
+_DISABLE_LINE_WRAP="\e[?7l"
+_ENABLE_LINE_WRAP="\e[?7h"
+_CLEAR_DISPLAY_FROM_CURSOR_TO_END_OF_SCREEN="\e[J"
 
 declare -A _PI_COLORS=(
     [$_PI_STATUS_WAITING]=$_WHITE
@@ -199,7 +206,7 @@ function start_progress_indicator
         _pi_task_pids+=(["$task_id"]=$!)
     done
 
-    _display_current_status
+    _do_update
 
     if [ -z "$_pi_indicator_process_pid" ]; then
         set +m
@@ -302,7 +309,7 @@ function _execute_script_and_report_status
 function _wait_for_tasks_to_finish
 {
 
-    while [ $_pi_indicator_stopping = 0 ] ; do
+    while [ $_pi_indicator_stopping -eq 0 ] ; do
         if _is_any_task_running; then
             sleep 0.2
         else
@@ -354,7 +361,6 @@ function _reset_indicator
     { kill $_pi_indicator_process_pid && wait; } 2>/dev/null
     _pi_indicator_process_pid=""
     set -m
-    echo -en "\033[2K\r"
 
     _pi_indicator_stopping=1
 }
@@ -376,23 +382,25 @@ function _shutdown_progress_indicator
 
 function _do_update
 {
-    _display_current_status
-}
-
-function _display_current_status
-{
     local old_lines_to_clear=$_PI_LINES_TO_CLEAR
     _PI_LINES_TO_CLEAR=0
-    local out=""
-    _build_current_status out _PI_LINES_TO_CLEAR
+    local output=""
+
+    _build_current_status output _PI_LINES_TO_CLEAR
+
+    # remove any outstanding lines
+    # (eg. when there were 4 log lines, and there is only 1 status line, then there will be 3 lines remaining)
+    output+="${_CLEAR_DISPLAY_FROM_CURSOR_TO_END_OF_SCREEN}"
+
+    # add empty lines if previoussly more lines were outputted than now
 
     # if there are any other lines to be cleared - rewind
     # the clearing itself will happen for each line separately
-    # see _build_progress_line
+    # see _build_progress_info
     if [ $old_lines_to_clear -gt 0 ]; then
-        echo -en "\e[${old_lines_to_clear}F$out"
+        $_ECHO_CMD "\e[${old_lines_to_clear}F$output${_RESET_ESCAPE_SEQUENCES}"
     else
-        echo -en "$out"
+        $_ECHO_CMD "$output${_RESET_ESCAPE_SEQUENCES}"
     fi
 }
 
@@ -420,13 +428,13 @@ function _build_current_status
         _refresh_task_status "$task_id"
         local tmp_status=""
         local lineno=0
-        _build_progress_line tmp_status lineno "$task_id"
+        _build_progress_info tmp_status lineno "$task_id"
         status_to_display+="$tmp_status"
         lines_counter=$(($lines_counter+$lineno))
     done
 }
 
-function _build_progress_line
+function _build_progress_info
 {
     local -n progress_line_to_display=$1
     local -n lines_number=$2
@@ -449,21 +457,44 @@ function _build_progress_line
     # show logline only for tasks in the RUNNING stage
     if [ "$status" = "$_PI_STATUS_RUNNING" ]; then
         log_file="$(_build_log_file_path "$task_id")"
-        log_line="${_DISABLE_LINE_WRAP}↳ $(test -f "$log_file" && tail -n 1 "$log_file")"
+        raw_log_lines=$(test -f "$log_file" && tail -n "$_LOG_LINES_TO_DISPLAY" "$log_file")
     # for tasks in status ERROR, point to logs
     elif [ "$status" = "$_PI_STATUS_ERROR" ] || [ "$status" = "$_PI_STATUS_DONE" ]; then
         log_file="$(_build_log_file_path "$task_id")"
-        log_line="↳ Logs: $log_file"
+        raw_log_lines="${_LOG_FILE_PATH_INFO_PREFIX}Logs: $log_file"
     # for the WAITING status - show the info
     elif [ "$status" = "$_PI_STATUS_WAITING" ]; then
-        log_line="$_PI_STATUS_MSG_WAITING"
+        raw_log_lines="$_PI_STATUS_MSG_WAITING"
     # for the PARENT_FAILED status - show the info
     elif [ "$status" = "$_PI_STATUS_PARENT_TASK_FAILED" ]; then
-        log_line="$_PI_STATUS_MSG_PARENT_TASK_FAILED"
+        raw_log_lines="$_PI_STATUS_MSG_PARENT_TASK_FAILED"
     fi
 
+    _build_output_line progress_line_to_display "${color}[${symbol}] ${label}"
+    _build_log_lines progress_line_to_display log_lines_number "$raw_log_lines"
     lines_number=$(($lines_number+1+$log_lines_number))
-    progress_line_to_display="${_CLEAR_LINE}${color}[$symbol] $label ${_RESET_COLOR}${_NEWLINE}${_CLEAR_LINE}    $log_line${_NEWLINE}"
+}
+
+function _build_log_lines
+{
+    local -n output_lines=$1
+    local -n lines_counter=$2
+    local raw_lines="$3"
+
+    local line
+    while IFS= read -r line; do
+        lines_counter=$(($lines_counter+1))
+        _build_output_line output_lines "    ${_GRAY}${line}"
+    done <<< "$raw_lines"
+}
+
+function _build_output_line
+{
+    local -n out=$1
+    local msg_line="$2"
+
+    out+="${_CLEAR_LINE}${_DISABLE_LINE_WRAP}${msg_line}${_ENABLE_LINE_WRAP}${_RESET_ESCAPE_SEQUENCES}${_NEWLINE}"
+
 }
 
 function _refresh_task_status
