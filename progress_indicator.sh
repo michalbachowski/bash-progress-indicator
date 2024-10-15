@@ -1,4 +1,4 @@
-_DEBUG=0
+_PI_DEBUG="${PI_DEBUG:-0}"
 _PI_WORK_DIR=
 _PI_LOG_DIR=
 _PI_STATUS_DIR=
@@ -61,8 +61,8 @@ declare -A _PI_SYMBOLS=(
 
 function setup_progress_indicator
 {
-    if [ -z "$2" ]; then
-        _DEBUG="$2"
+    if [ -n "$2" ]; then
+        _PI_DEBUG="$2"
     fi
     _setup_workdir "$1"
     _setup_logdir
@@ -553,7 +553,7 @@ function _get_task_status
 
 function _log_debug
 {
-    if [ "$_DEBUG" = "1" ]; then
+    if [ "$_PI_DEBUG" = "1" ]; then
         echo $1 >&2
     fi
 }
