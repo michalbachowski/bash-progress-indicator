@@ -24,11 +24,13 @@ start_progress_indicator
 
 (see [`test_spinner.sh`](tests/test_spinner.sh) to see a real example)
 
-* `<path-where-to-put-logs-and-status-information>` the path will be created if missing. Additional subdirectories named after current date (YMD) and time (HIS) will be created as well.
+* `<path-where-to-put-logs-and-status-information>` the path will be created if missing. Additional subdirectories named after current date (YMD) and time (HIS) will be created as well. Defaults to `~/process-indicator-logs`.
 * `<task-id>` can contain spaces, but be aware that the spaces will be then present in the log file names and it will be impossible to reference such task as a dependency
 * `<path-to-executable`> must be an existing file that current user can execute. No additional args are allowed.
 * `<optional-space-separated-list-of-IDs-of-required-tasks>` a string containing space-separated list of task IDs that need to succeede before the task is executed. \
 These _parent_ tasks must be specified before can be referenced in the dependencies!
+
+You can set `PI_DEBUG=1` to enable some debugging output.
 
 # Requirements
 
