@@ -34,3 +34,10 @@ These _parent_ tasks must be specified before can be referenced in the dependenc
 # Requirements
 
 `Bash 4+` is required, because associative arrays are used.
+
+# Testing
+
+```bash
+cd tests
+./test_spinner.sh
+```
