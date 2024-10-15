@@ -353,9 +353,6 @@ function _reset_indicator
     echo -en "\033[2K\r"
 
     _pi_indicator_stopping=1
-#tail -n +1 $_PI_LOG_DIR/*.done
-#tail -n +1 $_PI_STATUS_DIR/*
-#cat done.done
 }
 
 function _shutdown_progress_indicator
