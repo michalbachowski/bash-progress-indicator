@@ -67,7 +67,7 @@ function setup_progress_indicator
     _setup_logdir
     _setup_statusdir
 
-    trap _reset_indicator EXIT
+    trap _stop_progress_indicator EXIT
 }
 
 function _setup_workdir
@@ -210,13 +210,13 @@ function start_progress_indicator
 
     if [ -z "$_pi_indicator_process_pid" ]; then
         set +m
-        { _indicate_progress & } 2>/dev/null
+        { _progress_updater & } 2>/dev/null
         _pi_indicator_process_pid=$!
     fi
 
     _wait_for_tasks_to_finish
 
-    _reset_indicator
+    _stop_progress_indicator
 }
 
 function _execute_task
@@ -352,7 +352,7 @@ function _is_task_running
     return -1
 }
 
-function _reset_indicator
+function _stop_progress_indicator
 {
     if [ -z "$_pi_indicator_process_pid" ]; then
         return
@@ -365,7 +365,7 @@ function _reset_indicator
     _pi_indicator_stopping=1
 }
 
-function _shutdown_progress_indicator
+function _stop_progress_updater 
 {
     _pi_indicator_stopping=1
 
@@ -404,9 +404,9 @@ function _do_update
     fi
 }
 
-function _indicate_progress
+function _progress_updater
 {
-    trap _shutdown_progress_indicator EXIT
+    trap _stop_progress_updater EXIT
 
     while [ $_pi_indicator_stopping = 0 ] ; do
         _do_update
