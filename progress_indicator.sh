@@ -64,6 +64,7 @@ function setup_progress_indicator
     if [ -n "$2" ]; then
         _PI_DEBUG="$2"
     fi
+
     _setup_workdir "$1"
     _setup_logdir
     _setup_statusdir
@@ -105,10 +106,12 @@ function _setup_workdir
         return
     fi
 
-    _PI_WORK_DIR=$(realpath "$base")/$(date +"%Y%m%d/%H%M%S")
+    _PI_WORK_DIR="${base}/$(date +'%Y%m%d/%H%M%S')"
+    mkdir -p $_PI_WORK_DIR
+
+    _PI_WORK_DIR=$(realpath "$_PI_WORK_DIR")
     _log_debug "Setting up workdir to [$_PI_WORK_DIR]"
 
-    mkdir -p $_PI_WORK_DIR
 }
 
 function _setup_logdir
