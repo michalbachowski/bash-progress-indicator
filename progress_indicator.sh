@@ -211,6 +211,11 @@ function _validate_input
 
 function start_progress_indicator
 {
+    if [ -n "$_pi_indicator_process_pid" ]; then
+        echo "Cannot re-run progress indicator while other instance is running!"
+        exit 1
+    fi
+
     for ((i = 0; i < ${#_pi_tasks[@]}; i++)); do
         local task_id="${_pi_tasks[$i]}"
         local script="${_pi_scripts[$task_id]}"
@@ -230,13 +235,9 @@ function start_progress_indicator
         _pi_task_pids+=(["$task_id"]=$!)
     done
 
-    _do_update
-
-    if [ -z "$_pi_indicator_process_pid" ]; then
-        set +m
-        { _progress_updater & } 2>/dev/null
-        _pi_indicator_process_pid=$!
-    fi
+    set +m
+    { _progress_updater & } 2>/dev/null
+    _pi_indicator_process_pid=$!
 
     _wait_for_tasks_to_finish
 
@@ -387,8 +388,6 @@ function _stop_progress_indicator
     _pi_indicator_process_pid=""
 
     _pi_indicator_stopping=1
-
-    _do_update
 }
 
 function _stop_progress_updater 
@@ -439,6 +438,8 @@ function _progress_updater
         fi
         sleep 0.1
     done
+
+    _do_update
 }
 
 function _build_current_status
